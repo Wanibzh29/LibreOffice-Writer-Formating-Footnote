@@ -1,0 +1,63 @@
+Sub FormaterNotesBasDePage()
+    Dim oDoc As Object
+    Dim oFootnotes As Object
+    Dim oNote As Object
+    Dim oText As Object
+    Dim oCursor As Object
+    Dim sText As String
+    Dim i As Long
+    Dim nPos As Long
+
+    oDoc = ThisComponent
+    oFootnotes = oDoc.getFootnotes()
+
+    For i = 0 To oFootnotes.getCount() - 1
+        oNote = oFootnotes.getByIndex(i)
+        oText = oNote.getText()
+        sText = oText.getString()
+
+        ' Curseur sur toute la note
+        oCursor = oText.createTextCursor()
+        oCursor.gotoStart(False)
+        oCursor.gotoEnd(True)
+
+        ' Réinitialiser le gras
+        oCursor.CharWeight = com.sun.star.awt.FontWeight.NORMAL
+
+        ' --- Gras du début jusqu’à la fin de "]:"
+        nPos = InStr(sText, "]:")
+        If nPos > 0 Then
+            oCursor.gotoStart(False)
+            oCursor.goRight(nPos + 1, True) ' inclut ]:
+            oCursor.CharWeight = com.sun.star.awt.FontWeight.BOLD
+        End If
+
+        ' --- Champs à mettre en gras
+        GrasChamp oText, "Sin:"
+        GrasChamp oText, "Ant:"
+        GrasChamp oText, "TL:"
+        GrasChamp oText, "T:"
+    Next i
+
+    MsgBox "Formatage des notes terminé.", 64, "LibreOffice"
+End Sub
+
+
+Sub GrasChamp(oText As Object, sChamp As String)
+    Dim oCursor As Object
+    Dim sContent As String
+    Dim nPos As Long
+
+    sContent = oText.getString()
+    nPos = InStr(sContent, sChamp)
+
+    Do While nPos > 0
+        oCursor = oText.createTextCursor()
+        oCursor.gotoStart(False)
+        oCursor.goRight(nPos - 1, False)
+        oCursor.goRight(Len(sChamp), True)
+        oCursor.CharWeight = com.sun.star.awt.FontWeight.BOLD
+
+        nPos = InStr(nPos + Len(sChamp), sContent, sChamp)
+    Loop
+End Sub
